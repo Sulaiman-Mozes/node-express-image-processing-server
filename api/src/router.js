@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const imageProcessor = require('./imageProcessor');
 
 // eslint-disable-next-line new-cap
 const router = express.Router();
@@ -25,11 +26,16 @@ const storage = multer.diskStorage(
 
 const upload = multer({fileFilter: fileFilter, storage: storage});
 
-router.post('/upload', upload.single('photo'), (request, response) => {
+router.post('/upload', upload.single('photo'), async (request, response) => {
   if (request.fileValidationError) {
     response.status(400).json({error: request.fileValidationError});
   } else {
-    response.status(201).json({success: true});
+    try {
+      await imageProcessor(request.file.filename);
+      response.status(201).json({success: true});
+    } catch (err) {
+      response.status(500).json({error: error});
+    }
   }
 });
 
